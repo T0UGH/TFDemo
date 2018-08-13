@@ -55,7 +55,7 @@ def train(mnist):
     # 在所有代表神经网络参数的变量上使用滑动平均，即所有tf.trainable_variables集合中的变量
     variable_averages_op = variable_averages.apply(tf.trainable_variables())
 
-    # 计算使用了滑动平均之后的前向传播结果
+    # 计算使用了滑动平均之后的前向传播结果，就是那个影子变量，可用于验证训练效果
     average_y = inference(x, variable_averages, weight1, biases1, weight2, biases2)
 
     # 计算交叉熵
