@@ -175,7 +175,7 @@ def train(mnist):
 
 # 主程序入口
 def main(args=None):
-    mnist = input_data.read_data_sets("/tmp/data", one_hot=True)
+    mnist = input_data.read_data_sets("/PycharmProjects/TFDemo/data/MNIST", one_hot=True)
     train(mnist)
 
 
