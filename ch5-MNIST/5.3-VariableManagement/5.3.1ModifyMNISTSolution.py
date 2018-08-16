@@ -100,10 +100,10 @@ def train(mnist):
     # 给定滑动平均衰减率和训练轮数的变量，初始化滑动平均类
     variable_averages = tf.train.ExponentialMovingAverage(MOVING_AVERAGE_DECAY, global_step)
 
-    # 在所有代表神经网络参数的变量上使用滑动平均，即所有tf.trainable_variables集合中的变量
+    # 在所有代表神经网络参数的变量上使用滑动平均，即所有tf.trainable_variables集合中的变量，为这些变量都生成一个影子变量
     variable_averages_op = variable_averages.apply(tf.trainable_variables())
 
-    # 计算使用了滑动平均之后的前向传播结果，就是那个影子变量，可用于验证训练效果
+    # 计算使用了滑动平均之后的前向传播结果，可用于验证训练效果
     average_y = inference(x, variable_averages, reuse=True)
 
     # 计算交叉熵

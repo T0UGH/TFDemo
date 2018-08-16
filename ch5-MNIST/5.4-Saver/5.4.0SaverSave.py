@@ -13,6 +13,6 @@ saver = tf.train.Saver()
 with tf.Session() as sess:
 
     sess.run(init_op)
-
+    print(sess.run(result))
     # 将模型保存到D:PycharmProjects/TFDemo/data/model/540/model.ckpt
     saver.save(sess, "/PycharmProjects/TFDemo/data/model/540/model.ckpt")
