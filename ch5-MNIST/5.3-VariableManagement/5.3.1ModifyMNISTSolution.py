@@ -1,3 +1,5 @@
+import os
+
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
@@ -14,6 +16,9 @@ LEARNING_RATE_DECAY = 0.99      # 学习率的衰减率
 REGULARIZATION_RATE = 0.0001    # 正则化项在损失函数中的系数
 TRAINING_STEPS = 30000          # 训练轮数
 MOVING_AVERAGE_DECAY = 0.99     # 滑动平均衰减率
+
+MODEL_SAVE_PATH = "/PycharmProjects/TFDemo/data/model/531/"
+MODEL_NAME = "model.ckpt"
 
 
 # 在这里定义了一个使用ReLU激活函数的四层全连接网络
@@ -75,6 +80,7 @@ def inference(input_tensor, avg_class=None, reuse=False):
         return inference_without_avg(input_tensor, reuse=reuse)
     else:
         return inference_with_avg(input_tensor, avg_class, reuse=reuse)
+
 
 # 训练模型的整个过程
 def train(mnist):
@@ -138,39 +144,55 @@ def train(mnist):
     # 计算模型在这一组数据中的正确率
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
+    # 声明saver用于持久化训练模型
+    saver = tf.train.Saver()
+
     # 开启一个会话，开始计算过程
-    with tf.Session() as sess:
+    def calculate():
+        with tf.Session() as sess:
 
-        # 对所有变量进行初始化
-        tf.global_variables_initializer().run()
+            # 对所有变量进行初始化
+            tf.global_variables_initializer().run()
 
-        # 准备验证数据，一般可以在神经网络的训练过程中通过验证数据来大致判断停止的条件和评判训练的效果
-        validate_feed = {
-            x: mnist.validation.images,
-            y_: mnist.validation.labels
-        }
+            # 准备验证数据，一般可以在神经网络的训练过程中通过验证数据来大致判断停止的条件和评判训练的效果
+            validate_feed = {
+                x: mnist.validation.images,
+                y_: mnist.validation.labels
+            }
 
-        # 准备测试数据，作为模型训练结束之后的最终评价标准
-        test_feed = {
-            x: mnist.test.images,
-            y_: mnist.test.labels
-        }
+            # 准备测试数据，作为模型训练结束之后的最终评价标准
+            test_feed = {
+                x: mnist.test.images,
+                y_: mnist.test.labels
+            }
 
-        # 迭代地训练神经网络
-        for i in range(TRAINING_STEPS):
+            # 迭代地训练神经网络
+            for i in range(TRAINING_STEPS):
 
-            # 每过1000轮使用验证数据评价模型
-            if i % 1000 == 0:
-                validate_acc = sess.run(accuracy, feed_dict=validate_feed)
-                print("After %d training step(s), validation accuracy using average model is %g" % (i, validate_acc))
+                # 每过1000轮使用验证数据评价模型并对模型进行持久化
+                if i % 1000 == 0:
+                    validate_acc = sess.run(accuracy, feed_dict=validate_feed)
+                    # 使用saver对模型持久化
+                    saver.save(sess, os.path.join(MODEL_SAVE_PATH, MODEL_NAME), global_step=global_step)
+                    print("After %d training step(s), validation accuracy using average model is %g" % (i, validate_acc))
 
-            # 每轮都提取一个batch的数据，训练神经网络
-            xs, ys = mnist.train.next_batch(BATCH_NODE)
-            sess.run(train_op, feed_dict={x: xs, y_: ys})
+                # 如果3000轮正确率还没到90%，就重新生成随机数，重新开始
+                # 由于此模型的正确率极度依赖对参数的最初随机结果，所以一旦随机结果不尽如人意则重新开始
+                if i == 3000 and float(validate_acc) <= 0.9:
+                    return False
 
-        # 在训练结束之后，在测试数据上检测神经网络模型的最终正确率
-        test_acc = sess.run(accuracy, feed_dict=test_feed)
-        print("After %d training step(s), test accuracy using average model is %g" % (i, test_acc))
+                # 每轮都提取一个batch的数据，训练神经网络
+                xs, ys = mnist.train.next_batch(BATCH_NODE)
+                sess.run(train_op, feed_dict={x: xs, y_: ys})
+
+            # 在训练结束之后，在测试数据上检测神经网络模型的最终正确率
+            test_acc = sess.run(accuracy, feed_dict=test_feed)
+            print("After %d training step(s), test accuracy using average model is %g" % (i, test_acc))
+            return True
+
+    flag = True
+    while flag:
+        flag = not calculate()
 
 
 # 主程序入口
