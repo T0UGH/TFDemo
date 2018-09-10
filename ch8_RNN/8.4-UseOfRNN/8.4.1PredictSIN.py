@@ -17,13 +17,14 @@ SAMPLE_GAP = 0.1                    # 采样间隔
 
 
 # 产生训练所用数据集X和标记Y
-# 参数为一个数组,数组中的每个元素是sin函数的x值和对应的y值
+# 输入为一个数组,数组中的每个元素是sin函数的x值和对应的y值
+# 输出为生成的数据集x和标记y
 def generate_data(seq):
     x, y = [], []
 
-    # 将序列的第i项到第i+TIMESTEPS-1项作为输入
+    # 将序列的第i项到第i+TIMESTEPS-1项，共TIMESTEPS项作为输入
     # 将序列的第i+TIMESTEPS项作为输出
-    # 即使用sin函数前TIMESTEPS个节点的信息，来预测第i + TIMESTEPS个节点的函数值
+    # 即，使用sin函数前TIMESTEPS个节点的信息，来预测第i + TIMESTEPS个节点的函数值
     for i in range(len(seq) - TIMESTEPS):
         x.append([seq[i:i+TIMESTEPS]])
         y.append([seq[i + TIMESTEPS]])
@@ -31,7 +32,9 @@ def generate_data(seq):
     return np.array(x, dtype=np.float32), np.array(y, dtype=np.float32)
 
 
-# 定义LSTM模型、前向传播过程、损失函数和优化过程
+# 定义模型、前向传播过程、损失函数和优化过程
+# 输入为数据x、标记y和是否是训练过程is_training
+# 返回预测结果，损失函数，优化过程
 def lstm_model(x, y, is_training):
 
     # 使用多层的LSTM结构
@@ -62,15 +65,15 @@ def lstm_model(x, y, is_training):
     return predictions, loss, train_op
 
 
-# 训练过程
+# 训练模型
 def train(sess, train_x, train_y):
 
-    # 将训练数据以数据集的方式提供给计算图
+    # 对数据进行处理，将训练数据以数据集的方式提供给计算图
     ds = tf.data.Dataset.from_tensor_slices((train_x, train_y))
     ds = ds.repeat().shuffle(1000).batch(BATCH_SIZE)
     x, y = ds.make_one_shot_iterator().get_next()
 
-    # 调用模型得到预测结果、损失函数和优化步骤
+    # 调用模型传入数据并得到预测结果、损失函数和优化步骤
     with tf.variable_scope("model"):
         predictions, loss, train_op = lstm_model(x, y, True)
 
@@ -123,7 +126,7 @@ def main(args=None):
 
     # 产生训练集数据的起始值
     train_start = 0
-    # 产生训练集数据的终止值，也是产生测试集数据的起始值
+    # 产生训练集数据的终止值，也就是测试集数据的起始值
     train_end = test_start = (TRAINING_EXAMPLES + TIMESTEPS) * SAMPLE_GAP
     # 产生测试集数据的终止值
     test_end = test_start + (TESTING_EXAMPLES + TIMESTEPS) * SAMPLE_GAP
@@ -146,9 +149,8 @@ def main(args=None):
 if __name__ == '__main__':
     tf.app.run()
 
-
+# 某次训练的结果
 '''
-output result once:
 After 0 training step(s), the loss result is 0.525303
 After 100 training step(s), the loss result is 0.002255
 After 200 training step(s), the loss result is 0.000643
