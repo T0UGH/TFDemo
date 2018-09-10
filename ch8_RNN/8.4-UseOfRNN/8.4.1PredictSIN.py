@@ -69,8 +69,18 @@ def lstm_model(x, y, is_training):
 def train(sess, train_x, train_y):
 
     # 对数据进行处理，将训练数据以数据集的方式提供给计算图
+
+    # 切分传入Tensor的第一个维度，生成相应的dataSet
     ds = tf.data.Dataset.from_tensor_slices((train_x, train_y))
+
+    # ds.repeat : Repeats this dataset `count` times.
+    # ds.shuffle : 随机打乱这个数据集的元素
+    # ds.batch : 将此数据集的连续元素组合成batch
     ds = ds.repeat().shuffle(1000).batch(BATCH_SIZE)
+
+    # make_one_shot_iterator()用来生成一个迭代器来读取数据
+    # one_shot迭代器人如其名，意思就是数据输出一次后就丢弃了
+    # 之后每次x, y被会话调用迭代器就会将指针指向下一个元素
     x, y = ds.make_one_shot_iterator().get_next()
 
     # 调用模型传入数据并得到预测结果、损失函数和优化步骤
@@ -91,9 +101,16 @@ def train(sess, train_x, train_y):
 def run_eval(sess, test_x, test_y):
 
     # 将测试数据以数据集的方式提供给计算图
-    ds = tf.data.Dataset.from_tensor_slices((test_x, test_y))
-    ds = ds.batch(1)
-    x, y = ds.make_one_shot_iterator().get_next()
+
+    # 切分传入Tensor的第一个维度，生成相应的dataSet
+    data_set = tf.data.Dataset.from_tensor_slices((test_x, test_y))
+
+    # 类型转换，将Dataset转换为BatchDataset
+    data_set = data_set.batch(1)
+
+    # make_one_shot_iterator()用来生成一个迭代器来读取数据
+    # one_shot迭代器人如其名，意思就是数据输出一次后就丢弃了
+    x, y = data_set.make_one_shot_iterator().get_next()
 
     with tf.variable_scope("model", reuse=True):
 
