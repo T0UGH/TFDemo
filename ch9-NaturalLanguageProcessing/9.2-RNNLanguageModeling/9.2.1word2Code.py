@@ -1,8 +1,8 @@
 import codecs
 
-RAW_DATA = "/PycharmProjects/TFDemo/data/PTB/data/ptb.train.txt"
+RAW_DATA = "/PycharmProjects/TFDemo/data/PTB/data/ptb.test.txt"
 VOCAB = "/PycharmProjects/TFDemo/data/PTB/generate/ptb.vocab"
-OUTPUT_DATA = "/PycharmProjects/TFDemo/data/PTB/generate/ptb.train"
+OUTPUT_DATA = "/PycharmProjects/TFDemo/data/PTB/generate/ptb.test"
 
 # 读取词汇表，并建立词汇到单词编号的映射
 with codecs.open(VOCAB, "r", "utf-8") as f_vocab:
